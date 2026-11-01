@@ -39,3 +39,14 @@ To undo the last migration that has not been applied elsewhere: `dotnet ef migra
 - `Services/SchedulerService.cs` – scheduling, splitting, buffers, conflicts, suggestions
 - `Data/DatabaseBootstrapper.cs` – migrate on startup, back up pre-migration databases
 - `Controllers/`, `Views/`, `wwwroot/css/site.css`
+
+## Put it online (so it runs without your PC)
+FlexPlan includes a `Dockerfile` and `render.yaml`. In short:
+1. Create a free PostgreSQL database (for example at https://neon.tech) and copy its connection string.
+2. On https://render.com choose **New + > Web Service**, connect this GitHub repository, set the runtime to **Docker**.
+3. Add the environment variable `DATABASE_URL` = your connection string, then deploy.
+4. Open the `https://<name>.onrender.com` address Render shows.
+
+On the free plan the site goes to sleep when unused and takes about a minute to wake up. Users are signed out
+when it restarts. With PostgreSQL the tables are created automatically on first start; the migrations in
+`Migrations/` apply to the local SQLite database.

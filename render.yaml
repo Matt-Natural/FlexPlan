@@ -1,0 +1,11 @@
+# Optional "blueprint" so Render can set the site up for you.
+services:
+  - type: web
+    name: flexplan
+    runtime: docker
+    plan: free
+    envVars:
+      - key: TZ
+        value: Asia/Manila
+      - key: DATABASE_URL
+        sync: false   # you paste your PostgreSQL connection string in Render's dashboard

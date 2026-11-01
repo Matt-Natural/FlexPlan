@@ -1,0 +1,10 @@
+bin/
+obj/
+.git/
+.github/
+.vs/
+.vscode/
+*.db
+*.db-shm
+*.db-wal
+*.db.backup-*

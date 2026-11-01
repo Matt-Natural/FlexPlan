@@ -12,6 +12,14 @@ public static class DatabaseBootstrapper
     /// </summary>
     public static void PrepareAndMigrate(AppDbContext db, ILogger logger)
     {
+        // Hosted PostgreSQL: create the tables on first start.
+        // (The migrations in /Migrations are written for the local SQLite database.)
+        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            db.Database.EnsureCreated();
+            return;
+        }
+
         BackupLegacyDatabase(db, logger);
         db.Database.Migrate();
     }
