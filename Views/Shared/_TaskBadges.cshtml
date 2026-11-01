@@ -1,0 +1,4 @@
+@model TaskItem
+<span class="pill pr-@Model.Priority.ToString().ToLower()">@Model.Priority</span>
+@if (Model.IsAppointment) { <span class="pill pill-plain">Appointment</span> }
+@if (Model.IsOverdue) { <span class="pill st-over">Overdue</span> }

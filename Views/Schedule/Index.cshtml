@@ -1,0 +1,98 @@
+@model ScheduleViewModel
+@{
+    ViewData["Title"] = "Schedule";
+    string D(DateTime d) => d.ToString("yyyy-MM-dd");
+    string Px(double v) => v.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+    const int hourPx = 56;
+    var totalMin = (Model.EndHour - Model.StartHour) * 60;
+
+    // Put overlapping blocks side by side.
+    var lanes = new List<DateTime>();
+    var laneOf = new Dictionary<Block, int>();
+    foreach (var b in Model.Blocks.OrderBy(x => x.Start))
+    {
+        var i = lanes.FindIndex(e => e <= b.Start);
+        if (i < 0) { lanes.Add(b.End!.Value); i = lanes.Count - 1; } else lanes[i] = b.End!.Value;
+        laneOf[b] = i;
+    }
+    var laneCount = Math.Max(1, lanes.Count);
+}
+
+<div class="page-head">
+    <h1>Schedule</h1>
+    <span class="seg">
+        <a class="on" asp-controller="Schedule" asp-action="Index" asp-route-date="@D(Model.Date)">Day</a>
+        <a asp-controller="Calendar" asp-action="Index" asp-route-mode="week" asp-route-date="@D(Model.Date)">Week</a>
+        <a asp-controller="Calendar" asp-action="Index" asp-route-mode="month" asp-route-date="@D(Model.Date)">Month</a>
+    </span>
+</div>
+
+@if (Model.ConflictCount > 0)
+{
+    <div class="alert alert-bad">
+        <partial name="_Icon" model='"alert"' />
+        <div><strong>Scheduling conflict detected.</strong> <a asp-action="Conflicts">Review suggested adjustments</a></div>
+    </div>
+}
+
+<div class="cal-nav">
+    <a class="icon-btn" asp-action="Index" asp-route-date="@D(Model.Date.AddDays(-1))" aria-label="Previous day">‹</a>
+    <h2>@Model.Date.ToString("ddd, MMM d, yyyy")</h2>
+    <a class="icon-btn" asp-action="Index" asp-route-date="@D(Model.Date.AddDays(1))" aria-label="Next day">›</a>
+    <a class="btn btn-sm" asp-action="Index" asp-route-date="@D(DateTime.Today)">Today</a>
+</div>
+
+<div class="cal-layout">
+    <section class="panel timeline-panel">
+        <div class="tl" style="height:@((Model.EndHour - Model.StartHour) * hourPx)px">
+            @for (var h = Model.StartHour; h < Model.EndHour; h++)
+            {
+                <div class="tl-hour" style="top:@((h - Model.StartHour) * hourPx)px"><span>@DateTime.Today.AddHours(h).ToString("h:mm tt")</span></div>
+            }
+            @if (Model.Date == DateTime.Today && DateTime.Now.Hour >= Model.StartHour && DateTime.Now.Hour < Model.EndHour)
+            {
+                <div class="tl-now" style="top:@Px((DateTime.Now - Model.Date.AddHours(Model.StartHour)).TotalMinutes / 60 * hourPx)px"></div>
+            }
+            @foreach (var b in Model.Blocks)
+            {
+                var startMin = Math.Clamp((b.Start - Model.Date.AddHours(Model.StartHour)).TotalMinutes, 0, totalMin - 15);
+                var dur = (b.End!.Value - b.Start).TotalMinutes;
+                var height = Math.Max(26, dur / 60 * hourPx - 2);
+                var lane = laneOf[b];
+                <a class="tl-block @b.CategoryClass" asp-controller="Tasks" asp-action="Edit" asp-route-id="@b.Task.Id"
+                   style="top:@(Px(startMin / 60 * hourPx))px;height:@(Px(height))px;left:calc(4.5rem + (100% - 4.5rem) * @lane / @laneCount);width:calc((100% - 4.5rem) / @laneCount - 4px)">
+                    <strong>@b.Title</strong>
+                    <span>@b.TimeText</span>
+                </a>
+            }
+        </div>
+        @if (Model.Blocks.Count == 0) { <p class="empty">No timed items on this day.</p> }
+    </section>
+
+    <aside>
+        <section class="panel">
+            <h2>Quick Add</h2>
+            <div class="quick">
+                <a class="btn quick-btn" asp-controller="Tasks" asp-action="Create"><partial name="_Icon" model='"plus"' />Add Task</a>
+                <a class="btn quick-btn" asp-controller="Tasks" asp-action="Create" asp-route-type="appointment"><partial name="_Icon" model='"calendar"' />Add Appointment</a>
+                <form asp-controller="Tasks" asp-action="AutoSchedule" method="post">
+                    <input type="hidden" name="returnTo" value="@Context.Request.Path@Context.Request.QueryString" />
+                    <button class="btn quick-btn"><partial name="_Icon" model='"schedule"' />Re-optimize schedule</button>
+                </form>
+            </div>
+        </section>
+        @if (Model.DueOnly.Count > 0)
+        {
+            <section class="panel">
+                <h2>Due this day</h2>
+                <ul class="plain">
+                    @foreach (var b in Model.DueOnly)
+                    {
+                        <li><a asp-controller="Tasks" asp-action="Edit" asp-route-id="@b.Task.Id">@b.Task.Title</a>
+                            <div class="small muted">@b.TimeText</div></li>
+                    }
+                </ul>
+            </section>
+        }
+    </aside>
+</div>

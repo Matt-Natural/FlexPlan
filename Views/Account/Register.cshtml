@@ -1,0 +1,23 @@
+@model RegisterViewModel
+@{ ViewData["Title"] = "Create account"; }
+<section class="auth-shell">
+    <partial name="_AuthArt" />
+    <div class="auth-card">
+        <span class="logo big"><partial name="_Icon" model='"tasks"' /></span>
+        <h1>Create your account</h1>
+        <p class="muted">It takes less than a minute.</p>
+        <form asp-action="Register" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-warn"></div>
+            <label class="field icon"><partial name="_Icon" model='"user"' /><input asp-for="FullName" placeholder="Full name" autocomplete="name" autofocus /></label>
+            <span class="err" asp-validation-for="FullName"></span>
+            <label class="field icon"><partial name="_Icon" model='"mail"' /><input asp-for="Email" placeholder="Email address" autocomplete="email" /></label>
+            <span class="err" asp-validation-for="Email"></span>
+            <label class="field icon"><partial name="_Icon" model='"lock"' /><input asp-for="Password" placeholder="Password (8+ characters)" autocomplete="new-password" /></label>
+            <span class="err" asp-validation-for="Password"></span>
+            <label class="field icon"><partial name="_Icon" model='"lock"' /><input asp-for="ConfirmPassword" placeholder="Confirm password" autocomplete="new-password" /></label>
+            <span class="err" asp-validation-for="ConfirmPassword"></span>
+            <button class="btn btn-primary btn-block">Create account</button>
+        </form>
+        <p class="small center">Already have an account? <a asp-action="Login">Sign in</a></p>
+    </div>
+</section>

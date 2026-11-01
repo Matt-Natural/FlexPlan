@@ -1,0 +1,93 @@
+@model CalendarViewModel
+@{
+    ViewData["Title"] = "Calendar";
+    string D(DateTime d) => d.ToString("yyyy-MM-dd");
+    string Chip(Block b) => $"chip {b.CategoryClass}{(b.Task.Status == ProgressStatus.Completed ? " done" : "")}";
+    var selectedItems = Model.Items.Where(b => b.Start.Date == Model.Selected).ToList();
+}
+
+<div class="page-head">
+    <h1>Calendar</h1>
+    <div class="row">
+        <a class="btn btn-sm" asp-action="Index" asp-route-mode="@Model.Mode" asp-route-date="@D(DateTime.Today)">Today</a>
+        <span class="seg">
+            @foreach (var m in new[] { "month", "week", "day" })
+            {
+                <a class="@(Model.Mode == m ? "on" : "")" asp-action="Index" asp-route-mode="@m" asp-route-date="@D(Model.Selected)">@(char.ToUpper(m[0]) + m[1..])</a>
+            }
+        </span>
+    </div>
+</div>
+
+<div class="cal-nav">
+    <a class="icon-btn" asp-action="Index" asp-route-mode="@Model.Mode" asp-route-date="@D(Model.Prev)" aria-label="Previous">‹</a>
+    <h2>@Model.Title</h2>
+    <a class="icon-btn" asp-action="Index" asp-route-mode="@Model.Mode" asp-route-date="@D(Model.Next)" aria-label="Next">›</a>
+</div>
+
+@if (Model.Mode == "month")
+{
+    <div class="cal-layout">
+        <div class="cal-month">
+            @foreach (var name in new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" }) { <div class="dow">@name</div> }
+            @for (var i = 0; i < 42; i++)
+            {
+                var day = Model.RangeStart.AddDays(i);
+                var inMonth = day.Month == Model.Date.Month;
+                var items = Model.Items.Where(b => b.Start.Date == day).ToList();
+                <a class="cell @(inMonth ? "" : "out") @(day == DateTime.Today ? "today" : "") @(day == Model.Selected ? "sel" : "")"
+                   asp-action="Index" asp-route-mode="month" asp-route-date="@D(day)" aria-label="@day.ToString("MMMM d") – @items.Count item(s)">
+                    <span class="dnum">@day.Day</span>
+                    @if (items.Count > 0)
+                    {
+                        <span class="dots">@foreach (var b in items.Take(4)) { <i class="dot @b.CategoryClass"></i> }</span>
+                    }
+                </a>
+            }
+        </div>
+
+        <aside class="panel events">
+            <h2>Events</h2>
+            <p class="muted small">@Model.Selected.ToString("dddd, MMMM d")</p>
+            @if (selectedItems.Count == 0) { <p class="empty small">Nothing planned. <a asp-controller="Tasks" asp-action="Create">Add a task</a>.</p> }
+            else
+            {
+                <ul class="agenda stacked">
+                    @foreach (var b in selectedItems)
+                    {
+                        <li>
+                            <span class="dot @b.CategoryClass"></span>
+                            <div>
+                                <time>@b.TimeText</time>
+                                <a asp-controller="Tasks" asp-action="Edit" asp-route-id="@b.Task.Id">@b.Title</a>
+                            </div>
+                            <span class="pill @b.CategoryClass">@b.Task.Category</span>
+                        </li>
+                    }
+                </ul>
+            }
+            <a class="btn btn-sm" asp-controller="Schedule" asp-action="Index" asp-route-date="@D(Model.Selected)">Open day timeline</a>
+        </aside>
+    </div>
+}
+else
+{
+    var days = Model.Mode == "day" ? new[] { Model.Date } : Enumerable.Range(0, 7).Select(i => Model.RangeStart.AddDays(i)).ToArray();
+    <div class="cal-list @(Model.Mode == "week" ? "week" : "")">
+        @foreach (var day in days)
+        {
+            var items = Model.Items.Where(b => b.Start.Date == day).ToList();
+            <section class="daycol @(day == DateTime.Today ? "today" : "")">
+                <h3>@day.ToString("ddd, MMM d")</h3>
+                @if (items.Count == 0) { <p class="empty small">Free day.</p> }
+                @foreach (var b in items)
+                {
+                    <a class="@Chip(b) big" asp-controller="Tasks" asp-action="Edit" asp-route-id="@b.Task.Id">
+                        <strong>@b.Title</strong>
+                        <span>@b.TimeText</span>
+                    </a>
+                }
+            </section>
+        }
+    </div>
+}

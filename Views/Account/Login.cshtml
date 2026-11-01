@@ -1,0 +1,21 @@
+@model LoginViewModel
+@{ ViewData["Title"] = "Sign in"; }
+<section class="auth-shell">
+    <partial name="_AuthArt" />
+    <div class="auth-card">
+        <span class="logo big"><partial name="_Icon" model='"tasks"' /></span>
+        <h1>Welcome back</h1>
+        <p class="muted">Sign in to see today’s plan.</p>
+        <form asp-action="Login" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-warn"></div>
+            <input type="hidden" asp-for="ReturnUrl" />
+            <label class="field icon"><partial name="_Icon" model='"mail"' /><input asp-for="Email" placeholder="Email address" autocomplete="email" autofocus /></label>
+            <span class="err" asp-validation-for="Email"></span>
+            <label class="field icon"><partial name="_Icon" model='"lock"' /><input asp-for="Password" placeholder="Password" autocomplete="current-password" /></label>
+            <span class="err" asp-validation-for="Password"></span>
+            <label class="check"><input asp-for="RememberMe" /> <span>Keep me signed in</span></label>
+            <button class="btn btn-primary btn-block">Sign in</button>
+        </form>
+        <p class="small center">New to FlexPlan? <a asp-action="Register">Create an account</a></p>
+    </div>
+</section>

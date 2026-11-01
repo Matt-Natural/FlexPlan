@@ -1,0 +1,86 @@
+@model TaskFormViewModel
+<div asp-validation-summary="ModelOnly" class="alert alert-warn"></div>
+<input type="hidden" asp-for="IsAppointment" />
+
+<label class="field"><span>@(Model.IsAppointment ? "Appointment title" : "Task title")</span><input asp-for="Title" placeholder="@(Model.IsAppointment ? "Enter appointment title" : "Enter task title")" autofocus /><span class="err" asp-validation-for="Title"></span></label>
+<label class="field"><span>Description <em class="hint">(optional)</em></span><textarea asp-for="Description" rows="3" placeholder="Enter description (optional)"></textarea><span class="err" asp-validation-for="Description"></span></label>
+
+<div class="grid-2">
+    <label class="field"><span>Priority</span>
+        <select asp-for="Priority" asp-items="Html.GetEnumSelectList<TaskPriority>()"></select>
+    </label>
+    @if (Model.IsAppointment)
+    {
+        <label class="field"><span>Category</span>
+            <select asp-for="Category">@foreach (var c in Choices.Categories) { <option value="@c" selected="@(Model.Category == c)">@c</option> }</select>
+            <span class="err" asp-validation-for="Category"></span>
+        </label>
+    }
+    else
+    {
+        <label class="field"><span>Due date</span><input asp-for="DueDate" type="datetime-local" /><span class="err" asp-validation-for="DueDate"></span></label>
+    }
+</div>
+
+@if (Model.IsAppointment)
+{
+    <div class="grid-2">
+        <label class="field"><span>Start time</span><input asp-for="StartTime" type="datetime-local" /><span class="err" asp-validation-for="StartTime"></span></label>
+        <label class="field"><span>End time</span><input asp-for="EndTime" type="datetime-local" /><span class="err" asp-validation-for="EndTime"></span></label>
+    </div>
+}
+else
+{
+    <div class="grid-2">
+        <label class="field"><span>Category</span>
+            <select asp-for="Category">@foreach (var c in Choices.Categories) { <option value="@c" selected="@(Model.Category == c)">@c</option> }</select>
+            <span class="err" asp-validation-for="Category"></span>
+        </label>
+        <label class="check pad"><input asp-for="HasReminder" /> <span>Set reminder</span></label>
+    </div>
+
+    <fieldset class="mode">
+        <legend>Scheduling</legend>
+        <label class="check"><input asp-for="IsFlexible" id="flex" /> <span>Let FlexPlan schedule this task</span></label>
+        <p class="hint">FlexPlan places it in your free time before the deadline and moves it when things change.</p>
+
+        <div id="flex-fields">
+            <label class="field narrow"><span>Estimated minutes</span><input asp-for="EstimatedMinutes" type="number" min="5" step="5" inputmode="numeric" /><span class="err" asp-validation-for="EstimatedMinutes"></span></label>
+            <label class="check"><input asp-for="AllowSplit" /> <span>Allow splitting into shorter sessions</span></label>
+            <p class="hint">Long tasks are cut into sessions up to your maximum session length (Settings › Scheduling), with breaks in between, and spread over several days if needed.</p>
+        </div>
+        <div id="fixed-fields" class="grid-2">
+            <label class="field"><span>Start time <em class="hint">(optional)</em></span><input asp-for="StartTime" type="datetime-local" /></label>
+            <label class="field"><span>End time <em class="hint">(optional)</em></span><input asp-for="EndTime" type="datetime-local" /><span class="err" asp-validation-for="EndTime"></span></label>
+            <p class="hint span-2">Add both for fixed events like classes. Leave empty if it only has a deadline.</p>
+        </div>
+    </fieldset>
+
+    <script>
+        (function () {
+            var flex = document.getElementById('flex');
+            function sync() {
+                document.getElementById('flex-fields').hidden = !flex.checked;
+                document.getElementById('fixed-fields').hidden = flex.checked;
+            }
+            flex.addEventListener('change', sync); sync();
+        })();
+    </script>
+}
+
+@if (Model.IsAppointment)
+{
+    <label class="check"><input asp-for="HasReminder" /> <span>Set reminder</span></label>
+}
+
+@if (Model.Id == 0)
+{
+    <label class="field"><span>Subtasks <em class="hint">(optional, one per line)</em></span>
+        <textarea asp-for="SubtasksText" rows="3" placeholder="Read chapter 1&#10;Summarize notes&#10;Practice questions"></textarea>
+    </label>
+}
+
+@if (Model.Id != 0)
+{
+    <label class="field narrow"><span>Status</span><select asp-for="Status" asp-items="Html.GetEnumSelectList<ProgressStatus>()"></select></label>
+}

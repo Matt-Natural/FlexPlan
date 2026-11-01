@@ -1,0 +1,36 @@
+@model ProfileViewModel
+@{ ViewData["Title"] = "My profile"; var u = Model.User; }
+<div class="page-head">
+    <h1>My Profile</h1>
+    <div class="row">
+        <a class="btn btn-primary" asp-action="EditProfile">Edit profile</a>
+        <form asp-action="Logout" method="post"><button class="btn">Sign out</button></form>
+    </div>
+</div>
+
+<section class="panel profile">
+    <span class="avatar lg">@u.Initials</span>
+    <div>
+        <h2>@u.FullName</h2>
+        <p class="muted">@u.Email</p>
+    </div>
+</section>
+
+<section class="panel">
+    <dl class="facts">
+        <div><dt>Role</dt><dd>@u.Role</dd></div>
+        <div><dt>Preferred schedule</dt><dd>@Choices.Describe(u.PreferredSchedule)</dd></div>
+        <div><dt>Time zone</dt><dd>@u.TimeZoneLabel</dd></div>
+        <div><dt>Member since</dt><dd>@u.CreatedAt.ToString("MMM d, yyyy")</dd></div>
+    </dl>
+</section>
+
+<section class="panel">
+    <h2>Statistics</h2>
+    <div class="stats four">
+        <div class="stat"><span class="num">@Model.Total</span><span>Total tasks</span></div>
+        <div class="stat good"><span class="num">@Model.Completed</span><span>Completed</span></div>
+        <div class="stat"><span class="num">@Model.Pending</span><span>Pending</span></div>
+        <div class="stat @(Model.Overdue > 0 ? "bad" : "")"><span class="num">@Model.Overdue</span><span>Overdue</span></div>
+    </div>
+</section>

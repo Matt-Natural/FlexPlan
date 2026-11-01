@@ -1,0 +1,110 @@
+@model SettingsViewModel
+@{
+    ViewData["Title"] = "Settings";
+    var u = Model.User;
+    string Tab(string t) => Model.Tab == t ? "on" : "";
+}
+<div class="page-head"><h1>Settings</h1></div>
+
+<nav class="tabs" aria-label="Settings sections">
+    <a class="@Tab("account")" asp-action="Index" asp-route-tab="account">Account</a>
+    <a class="@Tab("scheduling")" asp-action="Index" asp-route-tab="scheduling">Scheduling</a>
+    <a class="@Tab("appearance")" asp-action="Index" asp-route-tab="appearance">Appearance</a>
+    <a class="@Tab("notifications")" asp-action="Index" asp-route-tab="notifications">Notifications</a>
+    <a class="@Tab("database")" asp-action="Index" asp-route-tab="database">Database</a>
+</nav>
+
+<section class="panel settings">
+@if (Model.Tab == "scheduling")
+{
+    <h2>Scheduling</h2>
+    <p class="muted">These preferences control how FlexPlan places your flexible tasks.</p>
+    <form asp-action="SaveScheduling" method="post">
+        <label class="field narrow"><span>Buffer between items</span>
+            <select name="bufferMinutes">
+                @foreach (var m in Choices.BufferOptions)
+                {
+                    <option value="@m" selected="@(u.BufferMinutes == m)">@(m == 0 ? "No buffer" : m + " minutes")</option>
+                }
+            </select>
+            <span class="hint">Breathing room before and after every task and appointment.</span>
+        </label>
+        <label class="field narrow"><span>Longest work session</span>
+            <select name="maxSessionMinutes">
+                @foreach (var m in Choices.SessionOptions)
+                {
+                    <option value="@m" selected="@(u.MaxSessionMinutes == m)">@m minutes</option>
+                }
+            </select>
+            <span class="hint">Tasks that allow splitting are cut into sessions no longer than this, with a break between them.</span>
+        </label>
+        <label class="check"><input type="checkbox" name="lunchBreak" value="true" checked="@u.LunchBreak" /> <span>Keep 12:00 – 1:00 PM free for lunch</span></label>
+        <p class="hint">Working hours come from your preferred schedule: <strong>@Choices.Describe(u.PreferredSchedule)</strong>. <a asp-controller="Account" asp-action="EditProfile">Change it in your profile</a>.</p>
+        <button class="btn btn-primary">Save changes</button>
+    </form>
+}
+else if (Model.Tab == "appearance")
+{
+    <h2>Appearance</h2>
+    <form asp-action="SaveAppearance" method="post">
+        <div class="theme-choices">
+            @foreach (var t in Choices.Themes)
+            {
+                <label class="theme-opt @(u.Theme == t ? "sel" : "")">
+                    <input type="radio" name="theme" value="@t" checked="@(u.Theme == t)" />
+                    <strong>@t</strong>
+                    <span class="muted small">@(t == "Light" ? "Bright background" : t == "Dark" ? "Easier on the eyes at night" : "Match your device")</span>
+                </label>
+            }
+        </div>
+        <button class="btn btn-primary">Save changes</button>
+    </form>
+}
+else if (Model.Tab == "notifications")
+{
+    <h2>Notifications</h2>
+    <form asp-action="SaveNotifications" method="post">
+        <label class="check"><input type="checkbox" name="remindersEnabled" value="true" checked="@u.RemindersEnabled" /> <span>Show deadline reminders in the bell</span></label>
+        <label class="check"><input type="checkbox" name="desktopNotifications" value="true" checked="@u.DesktopNotifications" /> <span>Send desktop notifications when something is about to start</span></label>
+        <label class="field narrow"><span>Remind me this far ahead</span>
+            <select name="reminderLeadMinutes">
+                <option value="30" selected="@(u.ReminderLeadMinutes == 30)">30 minutes</option>
+                <option value="60" selected="@(u.ReminderLeadMinutes == 60)">1 hour</option>
+                <option value="1440" selected="@(u.ReminderLeadMinutes == 1440)">1 day</option>
+                <option value="2880" selected="@(u.ReminderLeadMinutes == 2880)">2 days</option>
+            </select>
+        </label>
+        <button class="btn btn-primary">Save changes</button>
+    </form>
+}
+else if (Model.Tab == "database")
+{
+    <h2>Database</h2>
+    <div class="grid-2">
+        <label class="field"><span>Database type</span><input value="@Model.DbType" readonly /></label>
+        <label class="field"><span>Connection string</span><input value="@Model.ConnectionString" readonly /></label>
+    </div>
+    <p class="muted">FlexPlan keeps your data in a local file next to the app. You have <strong>@Model.TaskCount</strong> saved task(s) and appointment(s).</p>
+    <a class="btn" asp-action="Export">Download my tasks (CSV)</a>
+}
+else
+{
+    <h2>Account</h2>
+    <div class="profile small-gap">
+        <span class="avatar lg">@u.Initials</span>
+        <div><strong>@u.FullName</strong><div class="muted">@u.Email</div></div>
+    </div>
+    <form asp-action="SaveAccount" method="post" class="stack">
+        <label class="field"><span>Full name</span><input name="fullName" value="@u.FullName" maxlength="80" /></label>
+        <label class="field"><span>Email</span><input value="@u.Email" readonly /></label>
+        <button class="btn btn-primary">Save changes</button>
+    </form>
+    <h3 class="mt">Change password</h3>
+    <form asp-action="ChangePassword" method="post" class="stack">
+        <label class="field"><span>Current password</span><input type="password" name="currentPassword" autocomplete="current-password" /></label>
+        <label class="field"><span>New password</span><input type="password" name="newPassword" autocomplete="new-password" /><span class="hint">At least 8 characters.</span></label>
+        <label class="field"><span>Confirm new password</span><input type="password" name="confirmPassword" autocomplete="new-password" /></label>
+        <button class="btn">Change password</button>
+    </form>
+}
+</section>

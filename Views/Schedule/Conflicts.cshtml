@@ -1,0 +1,62 @@
+@model List<ConflictAdvice>
+@{ ViewData["Title"] = "Adaptive scheduling"; }
+
+<div class="page-head"><h1>Adaptive Scheduling <span class="muted">(Conflict Alert)</span></h1></div>
+
+@if (Model.Count == 0)
+{
+    <section class="panel">
+        <h2>No conflicts</h2>
+        <p class="muted">Nothing overlaps right now. FlexPlan will warn you here when something does.</p>
+        <a class="btn" asp-action="Index">Back to schedule</a>
+    </section>
+}
+
+@foreach (var a in Model)
+{
+    <section class="panel conflict-card">
+        <div class="alert alert-bad">
+            <partial name="_Icon" model='"alert"' />
+            <div>
+                <strong>Scheduling Conflict Detected</strong>
+                <p>Your @(a.First.IsAppointment ? "appointment" : "task") “@a.First.Title” overlaps with your @(a.Second.IsAppointment ? "appointment" : "task") “@a.Second.Title”
+                    on @a.Second.StartTime!.Value.ToString("MMM d") at @a.Second.StartTime!.Value.ToString("h:mm tt") – @a.Second.EndTime!.Value.ToString("h:mm tt").</p>
+            </div>
+        </div>
+
+        <h3>Suggested Adjustments</h3>
+        <form asp-action="Apply" method="post">
+            <input type="hidden" name="firstId" value="@a.First.Id" />
+            <input type="hidden" name="secondId" value="@a.Second.Id" />
+
+            <label class="option @(a.MoveSlot is null ? "off" : "")">
+                <input type="radio" name="choice" value="move" checked="@(a.MoveSlot is not null)" disabled="@(a.MoveSlot is null)" />
+                @if (a.MoveSlot is { } m)
+                {
+                    <span>Move “@a.Mover.Title” to @m.Start.ToString("MMM d, h:mm tt") – @m.End.ToString("h:mm tt")
+                        @if (a.MovePastDeadline) { <em class="hint"> (after its deadline)</em> }</span>
+                }
+                else { <span>Move “@a.Mover.Title” – no free time found in the next 2 weeks</span> }
+            </label>
+
+            <label class="option @(a.SwapWith is null ? "off" : "")">
+                <input type="radio" name="choice" value="swap" disabled="@(a.SwapWith is null)" />
+                @if (a.SwapWith is not null)
+                {
+                    <span>Swap “@a.Mover.Title” with “@a.SwapWith.Title” (@a.SwapWith.StartTime!.Value.ToString("MMM d, h:mm tt"))</span>
+                }
+                else { <span>Swap with another task (not possible right now)</span> }
+            </label>
+
+            <label class="option">
+                <input type="radio" name="choice" value="keep" checked="@(a.MoveSlot is null)" />
+                <span>Keep both (mark as conflict)</span>
+            </label>
+
+            <div class="row end">
+                <a class="btn" asp-action="Index">Cancel</a>
+                <button class="btn btn-primary">Apply Suggestion</button>
+            </div>
+        </form>
+    </section>
+}

@@ -1,0 +1,53 @@
+@{ ViewData["Title"] = "Plan today. Achieve tomorrow."; }
+
+<section class="hero">
+    <div class="hero-copy">
+        <h1>A plan that rearranges itself when your day does.</h1>
+        <p class="lead">
+            Add a task, move a deadline, or squeeze in something urgent. FlexPlan checks your priorities,
+            deadlines, and free hours, then reshuffles your schedule so nothing collides and nothing is forgotten.
+        </p>
+        <div class="hero-cta">
+            <a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Register">Create your free account</a>
+            <a class="btn btn-lg" asp-controller="Account" asp-action="Login">Sign in</a>
+        </div>
+        <p class="muted small">Made for students, teachers, employees, freelancers, parents, and business owners.</p>
+    </div>
+
+    <div class="reflow" aria-label="Example: an urgent task is added and other tasks move later in the day">
+        <div class="reflow-head"><strong>Today</strong><span class="muted small">An urgent task just arrived</span></div>
+        <div class="reflow-grid">
+            <div class="hours"><span>9</span><span>10</span><span>11</span><span>12</span><span>1</span><span>2</span></div>
+            <div class="lane">
+                <div class="blk fixed" style="top:0;height:25%">Team meeting <small>fixed</small></div>
+                <div class="blk urgent" style="top:25%;height:25%">Submit report <small>High · added now</small></div>
+                <div class="blk shift s1" style="top:50%;height:25%">Study chapter 4 <small>moved 1h later</small></div>
+                <div class="blk shift s2" style="top:75%;height:25%">Groceries <small>moved 1h later</small></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="features" class="section">
+    <h2>Everything you juggle, in one place</h2>
+    <div class="feature-grid">
+        <article><h3>Adaptive scheduling</h3><p>Mark a task as flexible and FlexPlan finds its slot. When priorities, deadlines, or free time change, it re-places the task for you.</p></article>
+        <article><h3>Long tasks, split smartly</h3><p>A three-hour task becomes shorter sessions spread across your free time, with breaks and a lunch hour left alone.</p></article>
+        <article><h3>Subtasks and checklists</h3><p>Break big tasks into steps. Check them off and the task’s progress updates itself.</p></article>
+        <article><h3>Conflict detection</h3><p>Overlapping appointments and tasks are flagged right away, so you can fix a clash before it becomes a missed commitment.</p></article>
+        <article><h3>Priorities that matter</h3><p>Set High, Medium, or Low. Urgent work is placed first and shows up first on your lists.</p></article>
+        <article><h3>Deadline reminders</h3><p>A reminder bell warns you about what is overdue, due within 24 hours, or starting soon.</p></article>
+        <article><h3>Day, week, and month views</h3><p>See your plans at any distance and spot open time at a glance.</p></article>
+        <article><h3>Progress tracking</h3><p>Move tasks from pending to in progress to done, and watch your completion rate on the dashboard.</p></article>
+    </div>
+</section>
+
+<section id="how" class="section section-tint">
+    <h2>How it works</h2>
+    <ol class="steps">
+        <li><h3>Add what you need to do</h3><p>Enter a title, a deadline, a priority, and how long it takes. Add a start and end time for fixed events like classes or appointments.</p></li>
+        <li><h3>Let FlexPlan place it</h3><p>Fixed events stay put. Flexible tasks are arranged around them, most important and most urgent first.</p></li>
+        <li><h3>Change your mind any time</h3><p>Edit a deadline or add an urgent task and the schedule updates. You get a warning if something no longer fits.</p></li>
+    </ol>
+    <div class="center"><a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Register">Start planning</a></div>
+</section>

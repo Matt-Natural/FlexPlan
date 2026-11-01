@@ -1,0 +1,9 @@
+# Keep line endings consistent between Windows, Mac and Linux
+* text=auto
+*.cs text eol=lf
+*.cshtml text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.md text eol=lf
+*.png binary
+*.jpg binary

@@ -1,0 +1,82 @@
+@{
+    var signedIn = User.Identity?.IsAuthenticated == true;
+    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string Active(string c) => string.Equals(ctrl, c, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+    var theme = Context.Request.Cookies["fp-theme"];
+    if (theme is not ("light" or "dark" or "system")) theme = "light";
+    var initials = string.Concat((User.Identity?.Name ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => char.ToUpper(p[0])));
+}
+<!DOCTYPE html>
+<html lang="en" data-theme="@theme">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#22405f" />
+    <title>@ViewData["Title"] – FlexPlan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="@(signedIn ? "app" : "public")">
+@if (signedIn)
+{
+    <aside class="sidebar">
+        <a class="brand" asp-controller="Dashboard" asp-action="Index"><span class="logo"><partial name="_Icon" model='"tasks"' /></span>FlexPlan</a>
+        <nav>
+            <a class="@Active("Dashboard")" asp-controller="Dashboard" asp-action="Index"><partial name="_Icon" model='"dashboard"' />Dashboard</a>
+            <a class="@Active("Tasks")" asp-controller="Tasks" asp-action="Index"><partial name="_Icon" model='"tasks"' />Tasks</a>
+            <a class="@Active("Calendar")" asp-controller="Calendar" asp-action="Index"><partial name="_Icon" model='"calendar"' />Calendar</a>
+            <a class="@Active("Schedule")" asp-controller="Schedule" asp-action="Index"><partial name="_Icon" model='"schedule"' />Schedule</a>
+            <a class="@Active("Settings")" asp-controller="Settings" asp-action="Index"><partial name="_Icon" model='"settings"' />Settings</a>
+        </nav>
+        <form class="sidebar-foot" asp-controller="Account" asp-action="Logout" method="post">
+            <button class="side-signout">Sign out</button>
+        </form>
+    </aside>
+    <div class="main">
+        <header class="topbar">
+            <div class="topbar-title">@ViewData["Title"]</div>
+            <div class="topbar-right">
+                <div class="bell-wrap">
+                    <button id="bell" class="icon-btn" aria-label="Reminders" aria-expanded="false">
+                        <partial name="_Icon" model='"bell"' />
+                        <span id="bell-count" class="bell-count" hidden>0</span>
+                    </button>
+                    <div id="bell-panel" class="bell-panel" hidden>
+                        <strong>Reminders</strong>
+                        <p class="muted small" id="bell-empty">Nothing needs your attention right now.</p>
+                        <ul id="bell-list"></ul>
+                    </div>
+                </div>
+                <a class="whoami" asp-controller="Account" asp-action="Profile" title="My profile">
+                    <span class="avatar sm">@initials</span>
+                    <span class="whoami-name">@User.Identity!.Name</span>
+                </a>
+            </div>
+        </header>
+        <main class="content">
+            @if (TempData["Success"] is string ok) { <div class="alert alert-ok" role="status">@ok</div> }
+            @if (TempData["Warning"] is string warn) { <div class="alert alert-warn" role="alert">@warn</div> }
+            @RenderBody()
+        </main>
+    </div>
+}
+else
+{
+    <header class="pubbar">
+        <a class="brand dark" asp-controller="Home" asp-action="Index"><span class="logo"><partial name="_Icon" model='"tasks"' /></span>FlexPlan</a>
+        <nav>
+            <a class="hide-sm" href="/#features">Features</a>
+            <a class="hide-sm" href="/#how">How it works</a>
+            <a asp-controller="Account" asp-action="Login">Sign in</a>
+            <a class="btn btn-primary" asp-controller="Account" asp-action="Register">Create account</a>
+        </nav>
+    </header>
+    <main>@RenderBody()</main>
+    <footer class="pubfoot">FlexPlan – adaptive scheduling and personal task management.</footer>
+}
+@if (signedIn) { <script src="~/js/site.js" asp-append-version="true"></script> }
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

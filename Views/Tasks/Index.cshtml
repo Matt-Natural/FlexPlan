@@ -1,0 +1,112 @@
+@model List<TaskItem>
+@{
+    ViewData["Title"] = "Tasks";
+    var conflictIds = (HashSet<int>)ViewBag.ConflictIds;
+    var returnTo = Context.Request.Path + Context.Request.QueryString;
+    string status = ViewBag.Status;
+    var tabs = new[] { ("", "All"), ("Pending", "Pending"), ("InProgress", "In Progress"), ("Completed", "Completed"), ("Overdue", "Overdue") };
+}
+
+<div class="page-head">
+    <h1>Tasks</h1>
+    <div class="row">
+        <a class="btn" asp-action="Create" asp-route-type="appointment">Add appointment</a>
+        <a class="btn btn-primary" asp-action="Create"><partial name="_Icon" model='"plus"' />Add Task</a>
+    </div>
+</div>
+
+<div class="chips" role="tablist">
+    @foreach (var (value, label) in tabs)
+    {
+        <a class="chip-tab @(status == value ? "on" : "")" asp-action="Index" asp-route-status="@value" asp-route-q="@ViewBag.Q" asp-route-sort="@ViewBag.Sort">@label</a>
+    }
+</div>
+
+<form method="get" class="filters">
+    <input type="hidden" name="status" value="@status" />
+    <input type="search" name="q" value="@ViewBag.Q" placeholder="Search tasks" aria-label="Search tasks" />
+    <select name="sort" aria-label="Sort by">
+        <option value="due" selected="@(ViewBag.Sort == "due")">Sort: due date</option>
+        <option value="priority" selected="@(ViewBag.Sort == "priority")">Sort: priority</option>
+        <option value="created" selected="@(ViewBag.Sort == "created")">Sort: newest</option>
+    </select>
+    <button class="btn">Apply</button>
+</form>
+
+@if (Model.Count == 0)
+{
+    <div class="panel"><p class="empty">Nothing here yet. <a asp-action="Create">Add a task</a> to get started.</p></div>
+}
+else
+{
+    <div class="table-wrap">
+    <table class="tasks">
+        <thead><tr><th class="chk"><span class="sr">Done</span></th><th>Task</th><th>Priority</th><th>Due date</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+        @foreach (var t in Model)
+        {
+            var conflict = conflictIds.Contains(t.Id);
+            var done = t.Status == ProgressStatus.Completed;
+            var sessions = t.Sessions.OrderBy(s => s.StartTime).ToList();
+            <tr class="@(done ? "done" : "") @(conflict ? "conflict" : "")">
+                <td class="chk">
+                    <form asp-action="SetStatus" method="post">
+                        <input type="hidden" name="id" value="@t.Id" />
+                        <input type="hidden" name="status" value="@(done ? "Pending" : "Completed")" />
+                        <input type="hidden" name="returnTo" value="@returnTo" />
+                        <input type="checkbox" checked="@done" onchange="this.form.submit()" aria-label="@(done ? "Reopen" : "Complete") @t.Title" />
+                    </form>
+                </td>
+                <td class="title-cell">
+                    <a class="task-title" asp-action="Edit" asp-route-id="@t.Id">@t.Title</a>
+                    <div class="small muted meta">
+                        <span class="pill @t.CategoryClass">@t.Category</span>
+                        @if (t.IsFlexible && sessions.Count > 1)
+                        {
+                            <span>@sessions.Count sessions · starts @sessions[0].StartTime.ToString("MMM d, h:mm tt")</span>
+                        }
+                        else if (t.HasBlock)
+                        {
+                            <span>@t.StartTime!.Value.ToString("MMM d, h:mm tt") – @t.EndTime!.Value.ToString("h:mm tt")</span>
+                        }
+                        else if (t.IsFlexible && !done)
+                        {
+                            <span>No room before the deadline</span>
+                        }
+                        @if (t.IsFlexible) { <span> · flexible, @t.EstimatedMinutes min@(t.AllowSplit ? ", can split" : "")</span> }
+                    </div>
+                    @if (t.SubtaskTotal > 0)
+                    {
+                        var pct = (int)Math.Round(100.0 * t.SubtaskDone / t.SubtaskTotal);
+                        <div class="sub-progress" title="@t.SubtaskDone of @t.SubtaskTotal subtasks done">
+                            <div class="bar"><i style="width:@pct%"></i></div>
+                            <span class="small muted">@t.SubtaskDone/@t.SubtaskTotal subtasks</span>
+                        </div>
+                    }
+                    @if (conflict) { <a class="pill st-over" asp-controller="Schedule" asp-action="Conflicts">Conflict – fix it</a> }
+                </td>
+                <td data-label="Priority"><span class="pill pr-@t.Priority.ToString().ToLower()">@t.Priority</span></td>
+                <td data-label="Due">@t.DueDate.ToString("MMM d, yyyy")<span class="small muted due-time"> @t.DueDate.ToString("h:mm tt")</span></td>
+                <td data-label="Status">
+                    <form asp-action="SetStatus" method="post" class="status-form">
+                        <input type="hidden" name="id" value="@t.Id" /><input type="hidden" name="returnTo" value="@returnTo" />
+                        <select name="status" class="status-sel st-@t.Status.ToString().ToLower()" onchange="this.form.submit()" aria-label="Status of @t.Title">
+                            <option value="Pending" selected="@(t.Status == ProgressStatus.Pending)">Pending</option>
+                            <option value="InProgress" selected="@(t.Status == ProgressStatus.InProgress)">In Progress</option>
+                            <option value="Completed" selected="@(t.Status == ProgressStatus.Completed)">Completed</option>
+                        </select>
+                    </form>
+                </td>
+                <td class="actions">
+                    <a class="icon-btn" asp-action="Edit" asp-route-id="@t.Id" aria-label="Edit @t.Title"><partial name="_Icon" model='"edit"' /></a>
+                    <form asp-action="Delete" method="post" onsubmit="return confirm('Delete this? This can’t be undone.');">
+                        <input type="hidden" name="id" value="@t.Id" />
+                        <button class="icon-btn danger" aria-label="Delete @t.Title"><partial name="_Icon" model='"trash"' /></button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    </div>
+}

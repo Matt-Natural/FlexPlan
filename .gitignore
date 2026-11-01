@@ -1,0 +1,17 @@
+# Build output
+bin/
+obj/
+
+# Local database and backups (these contain user accounts)
+*.db
+*.db-shm
+*.db-wal
+*.db.backup-*
+
+# Editor and OS files
+.vs/
+.vscode/
+*.user
+*.suo
+.DS_Store
+Thumbs.db

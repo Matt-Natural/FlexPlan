@@ -1,0 +1,68 @@
+@model TaskFormViewModel
+@{
+    ViewData["Title"] = Model.IsAppointment ? "Edit appointment" : "Edit task";
+    var returnTo = Context.Request.Path.ToString();
+}
+<section class="form-card">
+    <h1>@(Model.IsAppointment ? "Edit Appointment" : "Edit Task")</h1>
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" novalidate>
+        <input type="hidden" asp-for="Id" />
+        <partial name="_Form" model="Model" />
+        <div class="row end">
+            <a class="btn" asp-action="Index">Cancel</a>
+            <button class="btn btn-primary">Save</button>
+        </div>
+    </form>
+</section>
+
+@if (!Model.IsAppointment)
+{
+    <section class="form-card mt-card">
+        <h2>Subtasks
+            @if (Model.Subtasks.Count > 0) { <span class="muted small">(@Model.Subtasks.Count(s => s.IsDone) of @Model.Subtasks.Count done)</span> }
+        </h2>
+
+        @if (Model.Subtasks.Count == 0) { <p class="empty small">Break this task into small steps. Checking them all off completes the task.</p> }
+        else
+        {
+            <ul class="subtasks">
+                @foreach (var s in Model.Subtasks)
+                {
+                    <li class="@(s.IsDone ? "done" : "")">
+                        <form asp-action="ToggleSubtask" method="post">
+                            <input type="hidden" name="id" value="@s.Id" />
+                            <input type="hidden" name="returnTo" value="@returnTo" />
+                            <label class="check"><input type="checkbox" checked="@s.IsDone" onchange="this.form.submit()" /> <span>@s.Title</span></label>
+                        </form>
+                        <form asp-action="DeleteSubtask" method="post">
+                            <input type="hidden" name="id" value="@s.Id" />
+                            <button class="icon-btn danger" aria-label="Delete subtask @s.Title"><partial name="_Icon" model='"trash"' /></button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        }
+
+        <form asp-action="AddSubtask" method="post" class="add-sub">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <input name="title" maxlength="120" placeholder="Add a subtask" aria-label="New subtask" />
+            <button class="btn">Add</button>
+        </form>
+    </section>
+
+    @if (Model.IsFlexible && Model.Sessions.Count > 0)
+    {
+        <section class="form-card mt-card">
+            <h2>Planned sessions <span class="muted small">(@Model.Sessions.Count)</span></h2>
+            <ul class="plain">
+                @for (var i = 0; i < Model.Sessions.Count; i++)
+                {
+                    var s = Model.Sessions[i];
+                    <li>Session @(i + 1): <strong>@s.StartTime.ToString("ddd, MMM d")</strong> · @s.StartTime.ToString("h:mm tt") – @s.EndTime.ToString("h:mm tt")
+                        <span class="muted small">(@((int)(s.EndTime - s.StartTime).TotalMinutes) min)</span></li>
+                }
+            </ul>
+            <p class="hint">FlexPlan planned these automatically and will move them when your schedule changes.</p>
+        </section>
+    }
+}

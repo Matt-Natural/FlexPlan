@@ -1,0 +1,12 @@
+@model TaskFormViewModel
+@{ ViewData["Title"] = Model.IsAppointment ? "Add appointment" : "Add task"; }
+<section class="form-card">
+    <h1>@(Model.IsAppointment ? "Add New Appointment" : "Add New Task")</h1>
+    <form asp-action="Create" method="post" novalidate>
+        <partial name="_Form" model="Model" />
+        <div class="row end">
+            <a class="btn" asp-action="Index">Cancel</a>
+            <button class="btn btn-primary">Save</button>
+        </div>
+    </form>
+</section>
